@@ -107,7 +107,7 @@ public abstract class Sprite {
         matrix.prepend(inverse);
         matrix.prependRotation(theta, local_origin_x, local_origin_y);
         matrix.prepend(fullMatrix);
-        relativeRotation.prependRotation(theta);
+        relativeRotation.prependRotation(theta, local_origin_x, local_origin_y);
 
         Affine rotate = new Affine();
         rotate.prependRotation(theta, local_origin_x, local_origin_y);

@@ -43,8 +43,8 @@ public class UpperLegSprite extends Sprite {
         // make sure we have the correct transformations for this shape
         gc.setTransform(getFullMatrix());
         gc.drawImage(image, x, y);
-        gc.setStroke(Color.BLUE);
-        gc.strokeText(localID, x + w/2 - 3, y + h/2 + 3);
+//        gc.setStroke(Color.BLUE);
+//        gc.strokeText(localID, x + w/2 - 3, y + h/2 + 3);
 
         // draw children
         for (Sprite child : children) {

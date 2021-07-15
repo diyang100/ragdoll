@@ -2,8 +2,10 @@ TorsoSprite.java
  TorsoSprite
 UpperLegSprite.java
  UpperLegSprite
-HandSprite.java
- HandSprite
+Ragdoll.java
+ Ragdoll
+ Ragdoll$1
+ Ragdoll$OPERATION
 UpperArmSprite.java
  UpperArmSprite
 FootSprite.java
@@ -16,7 +18,5 @@ LowerLegSprite.java
  LowerLegSprite
 LowerArmSprite.java
  LowerArmSprite
-Ragdoll.java
- Ragdoll
- Ragdoll$1
- Ragdoll$OPERATION
+HandSprite.java
+ HandSprite
