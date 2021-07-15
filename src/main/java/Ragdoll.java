@@ -3,9 +3,10 @@ import javafx.geometry.Point2D;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.control.Label;
-import javafx.scene.control.ToggleButton;
-import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.*;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -24,6 +25,7 @@ public class Ragdoll extends Application {
 
 	enum OPERATION {TRANSLATE, ROTATE_AND_SCALE, ROTATE}
 	OPERATION operation = OPERATION.TRANSLATE;
+	Sprite root;
 
 	@Override
 	public void start(Stage stage) {
@@ -34,11 +36,38 @@ public class Ragdoll extends Application {
 		// setup a canvas to use as a drawing surface
 		Canvas canvas = new Canvas(screen_width, screen_height);
 		Label mouseCoords = new Label(Double.toString(previous_x) + ", " + Double.toString(previous_y));
-		Scene scene = new Scene(new VBox(new HBox(mouseCoords), canvas), screen_width, screen_height); // TODO: add menu here
 
 
 		// create hierarchy of sprites
-		Sprite root = createSprites();
+		root = createSprites();
+
+		MenuBar menubar = new MenuBar();
+		Menu fileMenu = new Menu("File");
+		MenuItem fileReset = new MenuItem("Reset (Ctrl-R)");
+		SeparatorMenuItem separator = new SeparatorMenuItem();
+		MenuItem fileQuit = new MenuItem("Quit (Ctrl-Q)");
+		fileMenu.getItems().addAll(fileReset, separator, fileQuit);
+
+		fileReset.setAccelerator(new KeyCodeCombination(KeyCode.R, KeyCombination.CONTROL_DOWN));
+		fileQuit.setAccelerator(new KeyCodeCombination(KeyCode.Q, KeyCombination.CONTROL_DOWN));
+
+		menubar.getMenus().addAll(fileMenu);
+
+		fileReset.setOnAction(actionEvent -> {
+			root = createSprites();
+			draw(canvas, root);
+		});
+		fileQuit.setOnAction(actionEvent -> {
+			System.out.println("File-Quit");
+			System.exit(0);
+		});
+
+		final String os = System.getProperty("os.name");
+		if (os != null && os.startsWith("Mac")) {
+			menubar.useSystemMenuBarProperty().set(true);
+		}
+
+		Scene scene = new Scene(new VBox(menubar, canvas), screen_width, screen_height);
 
 		// add listeners
 		// click selects the shape under the cursor
@@ -148,6 +177,9 @@ public class Ragdoll extends Application {
 						}
 						break;
 					case ROTATE:
+						System.out.print(selectedSprite.origin_x);
+						System.out.print(" ");
+						System.out.println(selectedSprite.origin_y);
 						double distance = Math.sqrt(Math.pow(mouseEvent.getX() - previous_x, 2) + Math.pow(mouseEvent.getY() - previous_y, 2));
 						double theta = Math.atan(distance);
 						if (mouseEvent.getX() > selectedSprite.origin_x && mouseEvent.getY() > selectedSprite.origin_y){

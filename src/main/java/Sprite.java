@@ -25,7 +25,10 @@ public abstract class Sprite {
     public Affine relativeTranslation = new Affine();
     public Affine relativeScaling = new Affine();
     public Affine relativeRotation = new Affine();
-    public Affine unscaled = new Affine();
+    public double rotationLimit = 50;
+    public double scaleLimit = 2;
+    public double rotationCounter = 1;
+    public double scaleCounter = 1;
 
     public Sprite() {
         localID = String.valueOf(++spriteID);
@@ -55,7 +58,6 @@ public abstract class Sprite {
     // these will pre-concat to the sprite's affine matrix
     void translate(double dx, double dy) throws NonInvertibleTransformException {
         matrix.prependTranslation(dx, dy);
-        unscaled.prependTranslation(dx, dy);
         relativeTranslation.prependTranslation(dx, dy);
         Affine translation = new Affine();
         translation.prependTranslation(dx, dy);
@@ -76,13 +78,28 @@ public abstract class Sprite {
         for (Sprite child : children) {
             child.matrix.append(inverse);
             child.matrix.prepend(translation);
-            child.unscaled.append(inverse);
-            child.unscaled.prepend(translation);
             child.fixTranslateChildren(translation, inverse);
         }
     }
 
     void rotate(double theta) throws NonInvertibleTransformException {
+//        System.out.println(rotationCounter);
+        if (rotationCounter > rotationLimit) {
+            if (rotationCounter + theta > rotationCounter) {
+                return;
+            } else {
+                rotationCounter += theta;
+            }
+        } else if (rotationCounter < -rotationLimit) {
+            if (rotationCounter + theta < rotationCounter) {
+                return;
+            } else {
+                rotationCounter += theta;
+            }
+        } else {
+            rotationCounter += theta;
+        }
+
         Affine fullMatrix = getFullMatrix();
         Affine inverse = fullMatrix.createInverse();
 
@@ -90,10 +107,6 @@ public abstract class Sprite {
         matrix.prepend(inverse);
         matrix.prependRotation(theta, local_origin_x, local_origin_y);
         matrix.prepend(fullMatrix);
-        unscaled.prepend(inverse);
-        unscaled.prependRotation(theta, local_origin_x, local_origin_y);
-        unscaled.prepend(fullMatrix);
-
         relativeRotation.prependRotation(theta);
 
         Affine rotate = new Affine();
@@ -107,12 +120,6 @@ public abstract class Sprite {
             child.matrix.prepend(rotate);
             child.matrix.prepend(fullMatrix);
 
-            child.unscaled.prepend(childFullMatrix.createInverse());
-            child.unscaled.prepend(child.relativeRotation);
-            child.unscaled.prepend(child.relativeTranslation);
-            child.unscaled.prepend(rotate);
-            child.unscaled.prepend(fullMatrix);
-
             for (Sprite grandChild : child.children) {
                 Affine grandChildFullMatrix = grandChild.getFullMatrix();
                 grandChild.matrix.prepend(grandChildFullMatrix.createInverse());
@@ -123,22 +130,20 @@ public abstract class Sprite {
                 grandChild.matrix.prepend(child.relativeTranslation);
                 grandChild.matrix.prepend(rotate);
                 grandChild.matrix.prepend(fullMatrix);
-
-                grandChild.unscaled.prepend(grandChildFullMatrix.createInverse());
-
-                grandChild.unscaled.prepend(grandChild.relativeRotation);
-                grandChild.unscaled.prepend(grandChild.relativeTranslation);
-                grandChild.unscaled.prepend(child.relativeRotation);
-                grandChild.unscaled.prepend(child.relativeTranslation);
-                grandChild.unscaled.prepend(rotate);
-                grandChild.unscaled.prepend(fullMatrix);
             }
         }
     }
 
     void scale(double sx, double sy) throws NonInvertibleTransformException {
+        System.out.println(scaleCounter);
+        if (scaleCounter > scaleLimit && scaleCounter * sy > scaleCounter) {
+            sy = 1;
+        } else if (scaleCounter < 1/scaleLimit && scaleCounter * sy < scaleCounter) {
+            sy = 1;
+        } else {
+            scaleCounter *= sy;
+        }
         Affine fullMatrix = getFullMatrix();
-        Affine unscaledFullMatrix = getFullMatrix(false);
         Affine inverse = fullMatrix.createInverse();
 
         // move to the origin, scale and move back
@@ -151,49 +156,59 @@ public abstract class Sprite {
         Affine scale = new Affine();
         scale.prependScale(sx, sy);
 
+//        scaleOrigin(scale);
+
         for (Sprite child : children) {
-            if (child.children.size() > 0) {
+            if (child.children.size() == 0) {
+                child.relativeScaling.prepend(scale.createInverse());
+
                 Affine childFullMatrix = child.getFullMatrix();
                 child.matrix.prepend(childFullMatrix.createInverse());
-                child.matrix.prepend(child.relativeRotation);
                 child.matrix.prepend(child.relativeScaling);
+                child.matrix.prepend(child.relativeRotation);
                 child.matrix.prepend(child.relativeTranslation);
-                child.matrix.prepend(scale);
-                child.matrix.prepend(unscaledFullMatrix);
-
-                for (Sprite grandChild : child.children) {
-                    Affine grandChildFullMatrix = grandChild.getFullMatrix();
-                    grandChild.matrix.prepend(grandChildFullMatrix.createInverse());
-
-                    grandChild.matrix.prepend(grandChild.relativeRotation);
-                    grandChild.matrix.prepend(grandChild.relativeTranslation);
-                    grandChild.matrix.prepend(child.relativeRotation);
-                    grandChild.matrix.prepend(child.relativeTranslation);
-                    grandChild.matrix.prepend(unscaledFullMatrix);
-                }
+                child.matrix.prepend(fullMatrix);
             } else {
                 Affine childFullMatrix = child.getFullMatrix();
                 child.matrix.prepend(childFullMatrix.createInverse());
+                child.matrix.prepend(child.relativeScaling);
                 child.matrix.prepend(child.relativeRotation);
                 child.matrix.prepend(child.relativeTranslation);
-                child.matrix.prepend(unscaledFullMatrix);
+                child.matrix.prepend(getFullMatrix());
+                for (Sprite grandChild : child.children) {
+                    grandChild.relativeScaling.prepend(scale.createInverse());
+
+                    Affine grandChildFullMatrix = grandChild.getFullMatrix();
+                    grandChild.matrix.prepend(grandChildFullMatrix.createInverse());
+                    grandChild.matrix.prepend(grandChild.relativeScaling);
+                    grandChild.matrix.prepend(grandChild.relativeRotation);
+                    grandChild.matrix.prepend(grandChild.relativeTranslation);
+                    grandChild.matrix.prepend(child.relativeScaling);
+                    grandChild.matrix.prepend(child.relativeRotation);
+                    grandChild.matrix.prepend(child.relativeTranslation);
+                    grandChild.matrix.prepend(fullMatrix);
+                }
             }
         }
     }
 
-    Affine getLocalMatrix() { return matrix; }
-    Affine getFullMatrix(boolean scaled) {
-        Affine fullMatrix = getLocalMatrix().clone();
-        if (!scaled) {
-            fullMatrix = unscaled.clone();
+    void scaleOrigin(Affine scale) {
+        for (Sprite child : children) {
+            Point2D childOrigin = new Point2D(1, 1);
+            childOrigin = scale.transform(childOrigin);
+            child.origin_x += childOrigin.getX();
+            child.origin_y += childOrigin.getY();
+            child.scaleOrigin(scale);
         }
+    }
+
+    Affine getLocalMatrix() { return matrix; }
+    Affine getFullMatrix() {
+        Affine fullMatrix = getLocalMatrix().clone();
         if (parent != null) {
             fullMatrix.append(parent.getFullMatrix());
         }
         return fullMatrix;
-    }
-    Affine getFullMatrix() {
-        return getFullMatrix(true);
     }
 
     // hit tests

@@ -33,7 +33,7 @@ public class HeadSprite extends Sprite {
         origin_y = h;
         local_origin_x = w/2;
         local_origin_y = h;
-
+        rotationLimit = 50;
     }
     // Draw on the supplied canvas
     protected void draw(GraphicsContext gc) {
@@ -75,17 +75,5 @@ public class HeadSprite extends Sprite {
         return false;
     }
 
-    @Override
-    void rotate(double theta) throws NonInvertibleTransformException {
-        Affine fullMatrix = getFullMatrix();
-        Affine inverse = fullMatrix.createInverse();
-
-        // move to the origin, rotate and move back
-        matrix.prepend(inverse);
-        matrix.prependRotation(theta, local_origin_x, local_origin_y);
-        matrix.prepend(fullMatrix);
-
-        relativeRotation.prependRotation(theta);
-    }
 }
 

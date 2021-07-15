@@ -29,11 +29,11 @@ public class UpperArmSprite extends Sprite {
         y = 0;
         w = image.getWidth();
         h = image.getHeight();
-        origin_x = 0;
-        origin_y = 0;
-        local_origin_x = 0;
-        local_origin_y = 0;
-
+        origin_x = w/2;
+        origin_y = 10;
+        local_origin_x = w/2;
+        local_origin_y = 10;
+        rotationLimit = 360;
     }
     // Draw on the supplied canvas
     protected void draw(GraphicsContext gc) {
