@@ -74,31 +74,5 @@ public class FootSprite extends Sprite {
         }
         return false;
     }
-
-    @Override
-    void rotate(double theta) throws NonInvertibleTransformException {
-        Affine fullMatrix = getFullMatrix();
-        Affine inverse = fullMatrix.createInverse();
-
-        // move to the origin, rotate and move back
-        matrix.prepend(inverse);
-        matrix.prependRotation(theta, local_origin_x, local_origin_y);
-        matrix.prepend(fullMatrix);
-
-        relativeRotation.prependRotation(theta);
-
-        Affine rotate = new Affine();
-        rotate.prependRotation(theta, local_origin_x, local_origin_y);
-
-        for (Sprite child : children) {
-            Affine childFullMatrix = child.getFullMatrix();
-            child.matrix.prepend(childFullMatrix.createInverse());
-            child.matrix.prepend(child.relativeRotation);
-            child.matrix.prepend(child.relativeTranslation);
-            child.matrix.prepend(rotate);
-            child.matrix.prepend(fullMatrix);
-        }
-    }
-
 }
 

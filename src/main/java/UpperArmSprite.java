@@ -74,42 +74,5 @@ public class UpperArmSprite extends Sprite {
         }
         return false;
     }
-
-    @Override
-    void rotate(double theta) throws NonInvertibleTransformException {
-        Affine fullMatrix = getFullMatrix();
-        Affine inverse = fullMatrix.createInverse();
-
-        // move to the origin, rotate and move back
-        matrix.prepend(inverse);
-        matrix.prependRotation(theta, local_origin_x, local_origin_y);
-        matrix.prepend(fullMatrix);
-
-        relativeRotation.prependRotation(theta);
-
-        Affine rotate = new Affine();
-        rotate.prependRotation(theta, local_origin_x, local_origin_y);
-
-        for (Sprite child : children) {
-            Affine childFullMatrix = child.getFullMatrix();
-            child.matrix.prepend(childFullMatrix.createInverse());
-            child.matrix.prepend(child.relativeRotation);
-            child.matrix.prepend(child.relativeTranslation);
-            child.matrix.prepend(rotate);
-            child.matrix.prepend(fullMatrix);
-
-            for (Sprite grandChild : child.children) {
-                Affine grandChildFullMatrix = grandChild.getFullMatrix();
-                grandChild.matrix.prepend(grandChildFullMatrix.createInverse());
-
-                grandChild.matrix.prepend(grandChild.relativeRotation);
-                grandChild.matrix.prepend(grandChild.relativeTranslation);
-                grandChild.matrix.prepend(child.relativeRotation);
-                grandChild.matrix.prepend(child.relativeTranslation);
-                grandChild.matrix.prepend(rotate);
-                grandChild.matrix.prepend(fullMatrix);
-            }
-        }
-    }
 }
 
